@@ -1,0 +1,16 @@
+{
+  "name": "syncworker-webpack-example",
+  "version": "1.0.0",
+  "dependencies": {
+    "aws-sdk": "^2.783.0",
+    "sync-threads": "^1.0.0"
+  },
+  "devDependencies": {
+    "webpack": "^4.44.2",
+    "webpack-cli": "^4.1.0"
+  },
+  "scripts": {
+    "build": "webpack",
+    "deploy": "npm run build && sam deploy"
+  }
+}

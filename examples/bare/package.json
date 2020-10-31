@@ -1,0 +1,11 @@
+{
+  "name": "syncworker-bare-example",
+  "version": "1.0.0",
+  "dependencies": {
+    "aws-sdk": "^2.783.0",
+    "sync-threads": "^1.0.0"
+  },
+  "scripts": {
+    "deploy": "sam deploy"
+  }
+}

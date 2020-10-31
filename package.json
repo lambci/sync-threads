@@ -1,0 +1,46 @@
+{
+  "name": "sync-threads",
+  "version": "1.0.0",
+  "description": "Perform asynchronous work synchronously using worker threads",
+  "author": "Michael Hart <michael.hart.au@gmail.com> (https://github.com/mhart)",
+  "license": "MIT",
+  "repository": "github:lambci/sync-threads",
+  "main": "src/index.js",
+  "types": "types/index.d.ts",
+  "files": [
+    "src",
+    "types"
+  ],
+  "devDependencies": {
+    "@types/node": "^12.19.3",
+    "eslint": "^7.12.1",
+    "eslint-config-prettier": "^6.15.0",
+    "prettier": "^2.1.2",
+    "typescript": "^4.0.5"
+  },
+  "scripts": {
+    "declaration": "tsc -p declaration.tsconfig.json",
+    "build": "npm run declaration",
+    "prepare": "npm run build",
+    "lint": "prettier -c . && eslint ."
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 120
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "prettier"
+    ],
+    "env": {
+      "node": true,
+      "es2017": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2019,
+      "sourceType": "module"
+    }
+  }
+}

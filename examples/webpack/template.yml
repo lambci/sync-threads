@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  WorkerTestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs12.x
+      CodeUri: dist
+      Handler: index.handler
+      MemorySize: 1024
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 1
+      DeploymentPreference:
+        Type: AllAtOnce
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: my-secret
