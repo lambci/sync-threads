@@ -59,7 +59,9 @@ You can see this example, as well as how you'd bundle it if you're using webpack
 
 Returns a synchronous function that will run the specified file as a worker, pass in any arguments you give it, and wait for the result.
 
-### `runAsWorker(workerAsyncFn)`
+By default uses a `bufferSize` of `64 * 1024` (64kb) to share with the worker process – you'll want to increase this if you need larger result objects or strings.
+
+## `runAsWorker(workerAsyncFn)`
 
 To be called from inside your worker code. It will run the given asynchronous function with the given arguments from the parent and share the result.
 
@@ -106,6 +108,6 @@ const ssm = new SSM()
   const {
     Parameter: { Value },
   } = await ssm.getParameter({ Name: process.argv[2], WithDecryption: true }).promise()
-  console.log('%j', { secret: Value })
+  process.stdout.write('\n' + JSON.stringify({ secret: Value }))
 })()
 ```
