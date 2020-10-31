@@ -1,6 +1,6 @@
 {
   "name": "sync-threads",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Perform asynchronous work synchronously using worker threads",
   "author": "Michael Hart <michael.hart.au@gmail.com> (https://github.com/mhart)",
   "license": "MIT",
