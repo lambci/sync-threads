@@ -65,8 +65,8 @@ By default uses a `bufferSize` of `64 * 1024` (64kb) to share with the worker pr
 const { createSyncFn } = require('sync-threads')
 const mySyncFn = createSyncFn('./worker.js')
 
-// Will serialize the arg and pass it to the worker thread
-mySyncFn({ some: 'input', data: true })
+// Will serialize the input arg and pass it to the worker thread
+const { whatever } = mySyncFn({ some: 'input', thing: 23 })
 ```
 
 ## `runAsWorker(workerAsyncFn)`
@@ -77,8 +77,8 @@ To be called from inside your worker code. It will run the given asynchronous fu
 const { runAsWorker } = require('sync-threads')
 
 // Takes the same arg as you pass to your sync function
-runAsWorker(async ({ some, data }) => {
-  return { some: 'result' }
+runAsWorker(async ({ some, thing }) => {
+  return { whatever: 'result' }
 })
 ```
 
