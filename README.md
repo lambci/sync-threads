@@ -59,7 +59,7 @@ You can see this example, as well as how you'd bundle it if you're using webpack
 
 Returns a synchronous function that will run the specified file as a worker, serialize and pass in the first argument you give it, and wait for the result.
 
-By default uses a `bufferSize` of `64 * 1024` (64kb) to share with the worker process – you'll want to increase this if you need larger result objects or strings.
+By default uses a `bufferSize` of `64 * 1024` (64kb) to share with the worker process for the seralized result – you'll want to increase this if you're returning larger objects than this from your async function.
 
 ```js
 const { createSyncFn } = require('sync-threads')
