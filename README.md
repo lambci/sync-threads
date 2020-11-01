@@ -55,8 +55,6 @@ You can see this example, as well as how you'd bundle it if you're using webpack
 
 # API
 
-`sync-threads` exports two main functions: `createSyncFn` and `runAsWorker`
-
 ## `createSyncFn(filename[, bufferSize])`
 
 Returns a synchronous function that will run the specified file as a worker, serialize and pass in the first argument you give it, and wait for the result.
