@@ -57,13 +57,30 @@ You can see this example, as well as how you'd bundle it if you're using webpack
 
 ## `createSyncFn(filename[, bufferSize])`
 
-Returns a synchronous function that will run the specified file as a worker, pass in any arguments you give it, and wait for the result.
+Returns a synchronous function that will run the specified file as a worker, serialize and pass in the first argument you give it, and wait for the result.
 
 By default uses a `bufferSize` of `64 * 1024` (64kb) to share with the worker process – you'll want to increase this if you need larger result objects or strings.
 
+```js
+const { createSyncFn } = require('sync-threads')
+const mySyncFn = createSyncFn('./worker.js')
+
+// Will serialize the arg and pass it to the worker thread
+mySyncFn({ some: 'input', data: true })
+```
+
 ## `runAsWorker(workerAsyncFn)`
 
-To be called from inside your worker code. It will run the given asynchronous function with the given arguments from the parent and share the result.
+To be called from inside your worker code. It will run the given asynchronous function with the given arguments from the parent, serialize the result to the shared buffer and notify the parent.
+
+```js
+const { runAsWorker } = require('sync-threads')
+
+// Takes the same arg as you pass to your sync function
+runAsWorker(async ({ some, data }) => {
+  return { some: 'result' }
+})
+```
 
 # Installation
 
