@@ -1,6 +1,8 @@
 # sync-threads
 
-Make asynchronous calls in Node.js synchronously using [worker threads](https://nodejs.org/api/worker_threads.html) and [Atomics semaphores](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics).
+Make asynchronous calls in Node.js synchronously.
+
+Behind the scenes it uses [worker threads](https://nodejs.org/api/worker_threads.html) and [Atomics semaphores](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics).
 
 Especially useful when you need to resolve promises at require-time,
 for example in an AWS Lambda function when using [provisioned concurrency](https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html#configuration-concurrency-provisioned).
