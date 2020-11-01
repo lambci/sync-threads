@@ -95,10 +95,7 @@ npm install sync-threads
 You can achieve something very similar to this library using the
 `spawnSync`/`execSync` functions from the `child_process` module in Node.js.
 
-The main difference is that this library performs the async work in a thread, without creating a separate `node` process,
-which makes it a little faster.
-
-Here's a simple example of how you'd do it without needing this library:
+Here's a simple example:
 
 `index.js`:
 
@@ -128,3 +125,9 @@ const ssm = new SSM()
   process.stdout.write('\n' + JSON.stringify({ secret: Value }))
 })()
 ```
+
+The main advantages this library brings over the above method are:
+
+1. Less overhead because we don't exec a separate process
+2. It uses faster v8 serialization instead of JSON parsing
+3. It will catch async exceptions in the worker and rethrow them from the sync function
