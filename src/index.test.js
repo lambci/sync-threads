@@ -20,3 +20,9 @@ it('should receive allow reusing a function', () => {
   const result2 = mySyncFn({ some: 'other', thing: 'thing' })
   assert.deepEqual(result2, { result: 'other...thing' })
 })
+
+it('should forward errors', () => {
+  const syncFn = createSyncFn(require.resolve('./fixtures/brokenWorker.js'))
+
+  assert.throws(() => syncFn(), { message: 'This one goes kaboom!' })
+})
