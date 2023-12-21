@@ -42,3 +42,11 @@ it('should support any number of arguments', () => {
   const result4 = mySyncFn()
   assert.deepEqual(result4, 0)
 })
+
+it('should properly catch timeouts', () => {
+  const syncFn = createSyncFn(require.resolve('./fixtures/slowWorker.js'), undefined, 5)
+
+  assert.throws(() => syncFn(1, 100), {
+    message: 'Timed out running async function',
+  })
+})

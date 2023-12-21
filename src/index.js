@@ -11,9 +11,10 @@ exports.runAsWorker = runAsWorker
 /**
  * @param {string} filename
  * @param {number} bufferSize
+ * @param {number} timeoutMs Timeout in Milliseconds
  * @returns {(...args: any) => any}
  */
-function createSyncFn(filename, bufferSize = 64 * 1024) {
+function createSyncFn(filename, bufferSize = 64 * 1024, timeoutMs) {
   return (...inputData) => {
     const sharedBuffer = new SharedArrayBuffer(bufferSize)
     const semaphore = new Int32Array(sharedBuffer)
@@ -21,7 +22,11 @@ function createSyncFn(filename, bufferSize = 64 * 1024) {
     worker.on('error', (e) => {
       throw e
     })
-    Atomics.wait(semaphore, 0, 0)
+    const result = Atomics.wait(semaphore, 0, 0, timeoutMs)
+    if (result === 'timed-out') {
+      throw new Error('Timed out running async function')
+    }
+
     let length = semaphore[0]
     let didThrow = false
     if (length < 0) {
