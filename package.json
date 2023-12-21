@@ -22,7 +22,8 @@
     "declaration": "tsc -p declaration.tsconfig.json",
     "build": "npm run declaration",
     "prepare": "npm run build",
-    "lint": "prettier -c . && eslint ."
+    "lint": "prettier -c . && eslint .",
+    "test": "node --test src/index.test.js"
   },
   "prettier": {
     "semi": false,
