@@ -14,9 +14,9 @@ exports.runAsWorker = runAsWorker
  * @returns (inputData?: any) => any
  */
 function createSyncFn(filename, bufferSize = 64 * 1024) {
-  const sharedBuffer = new SharedArrayBuffer(bufferSize)
-  const semaphore = new Int32Array(sharedBuffer)
   return (inputData = {}) => {
+    const sharedBuffer = new SharedArrayBuffer(bufferSize)
+    const semaphore = new Int32Array(sharedBuffer)
     const worker = new Worker(filename, { workerData: { inputData, sharedBuffer } })
     worker.on('error', (e) => {
       throw e
