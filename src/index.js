@@ -11,10 +11,10 @@ exports.runAsWorker = runAsWorker
 /**
  * @param {string} filename
  * @param {number} bufferSize
- * @returns (inputData?: any) => any
+ * @returns {(...args: any) => any}
  */
 function createSyncFn(filename, bufferSize = 64 * 1024) {
-  return (inputData = {}) => {
+  return (...inputData) => {
     const sharedBuffer = new SharedArrayBuffer(bufferSize)
     const semaphore = new Int32Array(sharedBuffer)
     const worker = new Worker(filename, { workerData: { inputData, sharedBuffer } })
@@ -37,7 +37,7 @@ function createSyncFn(filename, bufferSize = 64 * 1024) {
 }
 
 /**
- * @param {(inputData: any) => Promise<any>} workerAsyncFn
+ * @param {(...inputData: any) => Promise<any>} workerAsyncFn
  * @returns void
  */
 async function runAsWorker(workerAsyncFn) {
@@ -45,7 +45,7 @@ async function runAsWorker(workerAsyncFn) {
   let data,
     didThrow = false
   try {
-    data = await workerAsyncFn(inputData)
+    data = await workerAsyncFn(...inputData)
   } catch (e) {
     data = e
     didThrow = true
