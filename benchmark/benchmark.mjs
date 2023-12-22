@@ -39,7 +39,7 @@ hotBench
 await hotBench.run()
 console.table(hotBench.table())
 
-console.log('Load time')
+console.log('Total time')
 const totalBench = new Bench({ time: 100 })
 totalBench
   .add('native', async () => {
