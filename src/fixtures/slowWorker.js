@@ -1,9 +1,11 @@
-const { setTimeout } = require('node:timers/promises')
 const { runAsWorker } = require('../index.js')
 
 runAsWorker(async (wait) => {
   if (wait) {
-    await setTimeout(1000, 'value')
+    // Not using setTimeout here as we actually want to
+    // fully block the thread to simulate a stuck script
+    // Using await would not achieve this result
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000)
   }
 
   return true

@@ -1,7 +1,7 @@
 // @ts-check
 
 const v8 = require('v8')
-const { Worker, workerData } = require('worker_threads')
+const { Worker, parentPort } = require('worker_threads')
 
 const INT32_BYTES = 4
 
@@ -10,20 +10,43 @@ exports.runAsWorker = runAsWorker
 
 /**
  * @param {string} filename
+ * @returns {Worker}
+ */
+function initWorker(filename) {
+  const worker = new Worker(filename)
+
+  worker.on('error', (e) => {
+    throw e
+  })
+
+  // Make sure it won't block the process from exiting
+  worker.unref()
+
+  return worker
+}
+
+/**
+ * @param {string} filename
  * @param {number} bufferSize
  * @param {number} timeoutMs Timeout in Milliseconds
  * @returns {(...args: any) => any}
  */
 function createSyncFn(filename, bufferSize = 64 * 1024, timeoutMs) {
+  let worker = initWorker(filename)
+
   return (...inputData) => {
     const sharedBuffer = new SharedArrayBuffer(bufferSize)
     const semaphore = new Int32Array(sharedBuffer)
-    const worker = new Worker(filename, { workerData: { inputData, sharedBuffer } })
-    worker.on('error', (e) => {
-      throw e
-    })
+
+    worker.postMessage({ inputData, sharedBuffer })
+
     const result = Atomics.wait(semaphore, 0, 0, timeoutMs)
     if (result === 'timed-out') {
+      // If the call timed out, we terminate the current worker
+      // This avoid leaving resources stuck or penalize the next function call
+      worker.terminate()
+      worker = initWorker(filename)
+
       throw new Error('Timed out running async function')
     }
 
@@ -46,16 +69,23 @@ function createSyncFn(filename, bufferSize = 64 * 1024, timeoutMs) {
  * @returns void
  */
 async function runAsWorker(workerAsyncFn) {
-  const { inputData, sharedBuffer } = workerData
-  let data,
-    didThrow = false
-  try {
-    data = await workerAsyncFn(...inputData)
-  } catch (e) {
-    data = e
-    didThrow = true
+  if (!parentPort) {
+    throw new Error('Cannot connect to parent thread, are you running this function in a worker ?')
   }
-  notifyParent(sharedBuffer, data, didThrow)
+
+  parentPort.on('message', ({ inputData, sharedBuffer }) => {
+    ;(async () => {
+      let data,
+        didThrow = false
+      try {
+        data = await workerAsyncFn(...inputData)
+      } catch (e) {
+        data = e
+        didThrow = true
+      }
+      notifyParent(sharedBuffer, data, didThrow)
+    })()
+  })
 }
 
 /**
