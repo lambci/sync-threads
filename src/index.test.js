@@ -44,9 +44,16 @@ it('should support any number of arguments', () => {
 })
 
 it('should properly catch timeouts', () => {
-  const syncFn = createSyncFn(require.resolve('./fixtures/slowWorker.js'), undefined, 5)
+  // We put a timeout that's high enough to not be triggered by a slow CI
+  const timeout = 100
+  const syncFn = createSyncFn(require.resolve('./fixtures/slowWorker.js'), undefined, timeout)
 
-  assert.throws(() => syncFn(1, 100), {
+  assert.throws(() => syncFn(true), {
     message: 'Timed out running async function',
   })
+
+  // Calling the function a second time should not fail
+  // This could happen if the function is still waiting on the result of the first call
+  const result = syncFn(false)
+  assert.deepEqual(result, true)
 })
