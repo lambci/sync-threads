@@ -58,9 +58,27 @@ function createSyncFn(filename, bufferSize = 64 * 1024, timeoutMs) {
     }
     const data = v8.deserialize(Buffer.from(sharedBuffer, INT32_BYTES, length))
     if (didThrow) {
-      throw data
+      throw Object.assign(data.error, data.properties)
     }
     return data
+  }
+}
+
+/**
+ * Serialization does not copy properties of error objects
+ * @param {Record<string, any> | unknown} object
+ * @returns {Record<string, any> | undefined}
+ */
+function extractProperties(object) {
+  if (object && typeof object === 'object') {
+    /** @type {Record<string, any>} */
+    const knownObj = object
+    /** @type {Record<string, any>} */
+    const properties = {}
+    for (const key in object) {
+      properties[key] = knownObj[key]
+    }
+    return properties
   }
 }
 
@@ -79,8 +97,8 @@ async function runAsWorker(workerAsyncFn) {
         didThrow = false
       try {
         data = await workerAsyncFn(...inputData)
-      } catch (e) {
-        data = e
+      } catch (error) {
+        data = { error, properties: extractProperties(error) }
         didThrow = true
       }
       notifyParent(sharedBuffer, data, didThrow)

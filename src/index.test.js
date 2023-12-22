@@ -27,6 +27,22 @@ it('should forward errors', () => {
   assert.throws(() => syncFn(), { message: 'This one goes kaboom!' })
 })
 
+it('should forward fields of errors', () => {
+  const syncFn = createSyncFn(require.resolve('./fixtures/brokenWorker.js'))
+
+  let threwError = false
+
+  try {
+    syncFn()
+  } catch (e) {
+    threwError = true
+    assert.deepEqual(e.message, 'This one goes kaboom!')
+    assert.deepEqual(e.customField, 'The answer is 42')
+  }
+
+  assert.equal(threwError, true)
+})
+
 it('should support any number of arguments', () => {
   const mySyncFn = createSyncFn(require.resolve('./fixtures/multiArgWorker.js'))
 
