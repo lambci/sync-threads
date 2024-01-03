@@ -25,7 +25,7 @@
     "build": "npm run declaration",
     "prepare": "npm run build",
     "lint": "prettier -c . && eslint .",
-    "test": "node --test src/index.test.js"
+    "test": "node --test test/index.test.js"
   },
   "prettier": {
     "semi": false,

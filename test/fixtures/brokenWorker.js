@@ -1,4 +1,4 @@
-const { runAsWorker } = require('../index.js')
+const { runAsWorker } = require('../../src/index.js')
 
 runAsWorker(async () => {
   const err = new Error('This one goes kaboom!')

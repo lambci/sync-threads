@@ -1,4 +1,4 @@
-const { runAsWorker } = require('../index.js')
+const { runAsWorker } = require('../../src/index.js')
 
 runAsWorker(async (wait) => {
   if (wait) {
