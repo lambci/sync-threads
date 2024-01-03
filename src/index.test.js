@@ -62,7 +62,7 @@ it('should support any number of arguments', () => {
 it('should properly catch timeouts', () => {
   // We put a timeout that's high enough to not be triggered by a slow CI
   const timeout = 100
-  const syncFn = createSyncFn(require.resolve('./fixtures/slowWorker.js'), undefined, timeout)
+  const syncFn = createSyncFn(require.resolve('./fixtures/slowWorker.js'), { timeout })
 
   assert.throws(() => syncFn(true), {
     message: 'Timed out running async function',
@@ -72,4 +72,38 @@ it('should properly catch timeouts', () => {
   // This could happen if the function is still waiting on the result of the first call
   const result = syncFn(false)
   assert.deepEqual(result, true)
+})
+
+it('works with responses that require the SharedArrayBuffer to grow', async () => {
+  const mySyncFn = createSyncFn(require.resolve('./fixtures/worker.js'), {
+    bufferSize: 1024, // 1KB
+    maxBufferSize: 1024 * 1024 // 1MB
+  })
+
+  // 2KB String
+  const longString = 'x'.repeat(1024 * 2)
+
+  const result = mySyncFn({ some: 'some', thing: longString })
+
+  assert.deepEqual(result, { result: `some...${longString}` })
+})
+
+it('properly warns on responses that are too big', async () => {
+  process.env.SYNCKIT_MAX_BUFFER_SIZE = `${1024 * 1024}`
+
+  const mySyncFn = createSyncFn(require.resolve('./fixtures/worker.js'), {
+    bufferSize: 1024, // 1KB
+    maxBufferSize: 1024 * 1024 // 1MB
+  })
+
+  // 10MB string
+  const longString = 'x'.repeat(10 * 1024 * 1024)
+
+  assert.throws(() => mySyncFn({ some: 'some', thing: longString }), {
+    message: 'Worker response is bigger than the allowed transfer size. SharedArrayBuffer can accept up to 1048576 bytes. The response needs 10485789 bytes',
+  })
+
+  // Calling the function a second time should not fail
+  const result2 = mySyncFn({ some: 'other', thing: 'thing' })
+  assert.deepEqual(result2, { result: 'other...thing' })
 })

@@ -9,12 +9,28 @@ exports.createSyncFn = createSyncFn
 exports.runAsWorker = runAsWorker
 
 /**
+ * @typedef {Object} CreateFnOptionsRaw
+ * @property {number=} bufferSize The default size of the Buffer
+ * @property {number=} maxBufferSize The maximum size of the Buffer
+ * @property {number=} timeout Timeout in Milliseconds
+ */
+
+/**
+ * @typedef {Object} CreateFnOptions
+ * @property {number} bufferSize The default size of the Buffer
+ * @property {number} maxBufferSize The maximum size of the Buffer
+ * @property {number=} timeout Timeout in Milliseconds
+ */
+
+/**
  * @param {string} filename
- * @param {number} bufferSize
+ * @param {CreateFnOptions} options
  * @returns {{worker: Worker, sharedBuffer: SharedArrayBuffer, semaphore: Int32Array }}
  */
-function initWorker(filename, bufferSize) {
-  const sharedBuffer = new SharedArrayBuffer(bufferSize)
+function initWorker(filename, options) {
+  const sharedBuffer = new SharedArrayBuffer(options.bufferSize, {
+    maxByteLength: options.maxBufferSize,
+  })
   const semaphore = new Int32Array(sharedBuffer, 0, 1)
 
   const worker = new Worker(filename, {
@@ -32,13 +48,36 @@ function initWorker(filename, bufferSize) {
 }
 
 /**
+ * Set default values to options
+ *
+ * @param {CreateFnOptionsRaw} options 
+ * @returns {CreateFnOptions}
+ */
+function sanitizeOptions(options) {
+  const {
+    timeout,
+    bufferSize = 1024,
+    maxBufferSize = 1024 * 1024
+  } = options
+
+  return {
+    timeout,
+    bufferSize,
+    maxBufferSize
+  }
+}
+
+/**
  * @param {string} filename
- * @param {number} bufferSize
- * @param {number} timeoutMs Timeout in Milliseconds
+ * @param {number | CreateFnOptionsRaw | undefined} bufferSizeOrOptions
  * @returns {(...args: any) => any}
  */
-function createSyncFn(filename, bufferSize = 64 * 1024, timeoutMs) {
-  let { worker, sharedBuffer, semaphore } = initWorker(filename, bufferSize)
+function createSyncFn(filename, bufferSizeOrOptions = {}) {
+  const options = sanitizeOptions(typeof bufferSizeOrOptions === 'number'
+  ? { bufferSize: bufferSizeOrOptions }
+  : bufferSizeOrOptions)
+
+  let { worker, sharedBuffer, semaphore } = initWorker(filename, options)
 
   return (...inputData) => {
     // Reset SharedArrayBuffer
@@ -46,12 +85,12 @@ function createSyncFn(filename, bufferSize = 64 * 1024, timeoutMs) {
 
     worker.postMessage({ inputData })
 
-    const result = Atomics.wait(semaphore, 0, 0, timeoutMs)
+    const result = Atomics.wait(semaphore, 0, 0, options.timeout)
     if (result === 'timed-out') {
       // If the call timed out, we terminate the current worker
       // This avoid leaving resources stuck or penalize the next function call
       worker.terminate()
-      const newWorker = initWorker(filename, bufferSize)
+      const newWorker = initWorker(filename, options)
       worker = newWorker.worker
       sharedBuffer = newWorker.sharedBuffer
       semaphore = newWorker.semaphore
@@ -124,6 +163,27 @@ async function runAsWorker(workerAsyncFn) {
  * @returns void
  */
 function notifyParent(sharedBuffer, data, didThrow) {
+  let buf = v8.serialize(data)
+
+  const expectedBufferLength = buf.length + INT32_BYTES
+  if (expectedBufferLength > sharedBuffer.byteLength) {
+    if (
+      sharedBuffer.growable &&
+      expectedBufferLength <= (sharedBuffer.maxByteLength || 0) &&
+      sharedBuffer.grow
+    ) {
+      sharedBuffer.grow(expectedBufferLength)
+    } else {
+      didThrow = true
+      buf = v8.serialize({
+        error: new Error(
+          `Worker response is bigger than the allowed transfer size. SharedArrayBuffer can accept up to ${sharedBuffer.maxByteLength || sharedBuffer.byteLength} bytes. The response needs ${expectedBufferLength} bytes`
+        ),
+        properties: {},
+      })
+    }
+  }
+
   buf.copy(new Uint8Array(sharedBuffer, INT32_BYTES, buf.length))
   const semaphore = new Int32Array(sharedBuffer, 0, 1)
   Atomics.store(semaphore, 0, didThrow ? -buf.length : buf.length)
