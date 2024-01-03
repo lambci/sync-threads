@@ -13,16 +13,19 @@
   ],
   "devDependencies": {
     "@types/node": "^12.19.3",
+    "benchmark": "^2.1.4",
     "eslint": "^7.12.1",
     "eslint-config-prettier": "^6.15.0",
     "prettier": "^2.1.2",
+    "synckit": "^0.8.8",
     "typescript": "^4.0.5"
   },
   "scripts": {
     "declaration": "tsc -p declaration.tsconfig.json",
     "build": "npm run declaration",
     "prepare": "npm run build",
-    "lint": "prettier -c . && eslint ."
+    "lint": "prettier -c . && eslint .",
+    "test": "node --test test/index.test.js"
   },
   "prettier": {
     "semi": false,
