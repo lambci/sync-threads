@@ -56,7 +56,7 @@ function createSyncFn(filename, bufferSize = 64 * 1024, timeoutMs) {
       didThrow = true
       length *= -1
     }
-    const data = v8.deserialize(Buffer.from(sharedBuffer, INT32_BYTES, length))
+    const data = v8.deserialize(new Uint8Array(sharedBuffer, INT32_BYTES, length))
     if (didThrow) {
       throw Object.assign(data.error, data.properties)
     }
@@ -113,9 +113,8 @@ async function runAsWorker(workerAsyncFn) {
  * @returns void
  */
 function notifyParent(sharedBuffer, data, didThrow) {
-  const buf = v8.serialize(data)
-  buf.copy(Buffer.from(sharedBuffer), INT32_BYTES)
-  const semaphore = new Int32Array(sharedBuffer)
+  buf.copy(new Uint8Array(sharedBuffer, INT32_BYTES, buf.length))
+  const semaphore = new Int32Array(sharedBuffer, 0, 1)
   Atomics.store(semaphore, 0, didThrow ? -buf.length : buf.length)
   Atomics.notify(semaphore, 0)
 }
